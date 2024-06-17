@@ -1,0 +1,212 @@
+Industry-level example involving all three types of Kubernetes services (ClusterIP, NodePort, and LoadBalancer).
+Suppose we are deploying a multi-tier web application with a front-end, back-end, and database.
+We will use different service types to expose and manage these components.
+
+Example: Multi-Tier Web Application
+
+Architecture
+Front-End: React.js application served by Nginx.
+Back-End: Node.js application.
+Database: MySQL.
+
+First ClusterIP Service for Database
+
+Create the MySQL Deployment:
+
+mysql-deployment.yaml:
+
+yaml Copy code
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mysql
+  template:
+    metadata:
+      labels:
+        app: mysql
+    spec:
+      containers:
+      - name: mysql
+        image: mysql:5.7
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          value: rootpassword
+        ports:
+        - containerPort: 3306
+
+Apply the MySQL Deployment:
+
+bashCopy code
+
+kubectl apply -f mysql-deployment.yaml
+
+Create the MySQL ClusterIP Service:
+
+mysql-service.yaml:
+
+yaml
+Copy code
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql-service
+spec:
+  selector:
+    app: mysql
+  ports:
+    - protocol: TCP
+      port: 3306
+      targetPort: 3306
+  type: ClusterIP
+
+Apply the MySQL Service:
+
+bash Copy code
+kubectl apply -f mysql-service.yaml
+NodePort Service for Back-End
+Create the Node.js Deployment:
+
+backend-deployment.yaml:
+
+yaml Copy code
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend-deployment
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+      - name: backend
+        image: my-backend-image
+        env:
+        - name: DATABASE_HOST
+          value: mysql-service
+        ports:
+        - containerPort: 3000
+
+Apply the Node.js Deployment:
+
+bashCopy code
+kubectl apply -f backend-deployment.yaml
+
+Create the Node.js NodePort Service:
+
+backend-service.yaml:
+
+yaml
+Copy code
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-service
+spec:
+  selector:
+    app: backend
+  ports:
+    - protocol: TCP
+      port: 3000
+      targetPort: 3000
+      nodePort: 30007  # Optional: specify a port or let Kubernetes assign one
+  type: NodePort
+Apply the Node.js Service:
+
+bash
+Copy code
+kubectl apply -f backend-service.yaml
+LoadBalancer Service for Front-End
+Create the Nginx Deployment:
+
+frontend-deployment.yaml:
+
+yaml
+Copy code
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend-deployment
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+      - name: frontend
+        image: my-frontend-image
+        ports:
+        - containerPort: 80
+Apply the Nginx Deployment:
+
+bash
+Copy code
+kubectl apply -f frontend-deployment.yaml
+Create the Nginx LoadBalancer Service:
+
+frontend-service.yaml:
+
+yaml
+Copy code
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend-service
+spec:
+  selector:
+    app: frontend
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+  type: LoadBalancer
+Apply the Nginx Service:
+
+bashCopy code
+kubectl apply -f frontend-service.yaml
+
+
+
+Summary
+In this multi-tier application example, we utilized different service types to manage and expose our services appropriately:
+
+Database (MySQL): We used a ClusterIP service to expose the MySQL database internally within the cluster.
+This service type ensures that the database is accessible only by other components within the cluster and not exposed to external traffic.
+
+Back-End (Node.js): We used a NodePort service to expose the back-end application. 
+This service type makes the application accessible from outside the cluster via a static port on each node. It provides an entry point for external traffic that needs to interact with the back-end API.
+
+Front-End (Nginx): We used a LoadBalancer service to expose the front-end application. 
+This service type creates an external load balancer that distributes incoming traffic across the front-end pods. It provides a single external IP address that can be used to access the front-end application from the internet.
+
+Accessing the Services
+Database: The back-end application will connect to the MySQL database using the service name mysql-service within the cluster.
+
+Back-End: The back-end application will be accessible from outside the cluster using the IP address of any node and the node port (e.g., http://<node-ip>:30007).
+
+Front-End: The front-end application will be accessible from the internet using the external IP address provided by the cloud provider (e.g., http://<external-ip>).
+
+This example demonstrates how different Kubernetes service types can be used in a real-world scenario to manage and expose various components of a multi-tier application effectively.
+
+
+
+
+
+
+
+
