@@ -3,6 +3,8 @@
 
 2.Control pod communication between different namespaces using network policies.
 
+4. Granting S3 Access to Kubernetes Pods
+
 
 3. **Restrict Access to Specific Namespaces in EKS**
 
