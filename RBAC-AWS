@@ -1,0 +1,59 @@
+ TASK 
+1. Cross-Account Access to EKS Cluster
+
+
+2. **Restrict Access to Specific Namespaces in EKS**
+
+You want to restrict certain users to only have access to specific namespaces in your EKS cluster.
+
+Steps
+Create a Namespace:
+
+Define the namespace.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: restricted-namespace
+
+
+kubectl apply -f namespace.yaml
+Create a Role for the Namespace:
+
+Define a role with permissions limited to the namespace.
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: restricted-namespace
+  name: restricted-role
+rules:
+- apiGroups: [""]
+  resources: ["pods", "services"]
+  verbs: ["get", "watch", "list"]
+
+
+
+kubectl apply -f role.yaml
+
+Create a RoleBinding for the Role:
+
+Bind the role to a user.
+
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: restricted-rolebinding
+  namespace: restricted-namespace
+subjects:
+- kind: User
+  name: restricted-user
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: Role
+  name: restricted-role
+  apiGroup: rbac.authorization.k8s.io
+bash
+Copy code
+kubectl apply -f rolebinding.yaml
+
